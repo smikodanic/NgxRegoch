@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { RegochWebsocketAngularModule, RegochWebsocketAngularService } from 'regoch-websocket-angular';
 
 import { AppComponent } from './app.component';
 
@@ -8,9 +9,10 @@ import { AppComponent } from './app.component';
     AppComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    RegochWebsocketAngularModule
   ],
-  providers: [],
+  providers: [RegochWebsocketAngularService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

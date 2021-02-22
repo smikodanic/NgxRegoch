@@ -1,27 +1,36 @@
 # NgxRegoch
+Regoch libraries for Angular framework.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.2.
 
-## Development server
+## 1. [regoch-websocket-angular](./projects/regoch-websocket-angular/README.md)
+> Websocket Client for angular framework. Works best with the [Regoch Websocket Server](https://github.com/smikodanic/regoch-websocket-server).
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
-## Code scaffolding
+**INSTALLATION**
+```bash
+npm install --save regoch-websocket-angular
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+**DEVELOPMENT**
+In first terminal open the app where the library will be tested.
+```bash
+$ cd /NgxRegoch
+$ ng serve -o
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+In the second terminal build the project (library) regoch-websocket-client
+```bash
+$ cd /NgxRegoch/projects/regoch-websocket-angular
+$ ng build RegochWebsocketAngular --watch
+```
 
-## Running unit tests
+Make link to the builded library.
+```bash
+$ cd /NgxRegoch/dist/regoch-websocket-angular
+$ sudo npm link
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Now both the test app and the lib will be updated as the code is changed.
 
-## Running end-to-end tests
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.

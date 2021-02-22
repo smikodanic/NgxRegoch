@@ -118,7 +118,50 @@
           }
         }
       }
+    },
+    "RegochWebsocketAngular": {
+      "projectType": "library",
+      "root": "projects/regoch-websocket-angular",
+      "sourceRoot": "projects/regoch-websocket-angular/src",
+      "prefix": "RWA",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "tsConfig": "projects/regoch-websocket-angular/tsconfig.lib.json",
+            "project": "projects/regoch-websocket-angular/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/regoch-websocket-angular/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/regoch-websocket-angular/src/test.ts",
+            "tsConfig": "projects/regoch-websocket-angular/tsconfig.spec.json",
+            "karmaConfig": "projects/regoch-websocket-angular/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/regoch-websocket-angular/tsconfig.lib.json",
+              "projects/regoch-websocket-angular/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
-  "defaultProject": "NgxRegoch"
+  "defaultProject": "NgxRegoch",
+  "cli": {
+    "analytics": false
+  }
 }
