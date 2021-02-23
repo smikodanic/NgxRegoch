@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { EventEmitter } from 'events';
 import jsonRWS from './lib/subprotocol/jsonRWS';
-import Router from './lib/Router';
-import helper from './lib/helper';
+import { Helper } from './lib/Helper';
 
 
 
@@ -27,7 +26,6 @@ export class RegochWebsocketAngularService {
   wsocket: any; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
   socketID: number; // socket ID number, for example: 210214082949459100
   eventEmitter: EventEmitter;
-  router: Router;
   helper: any;
   private attempt: number; // reconnect attempt counter
 
@@ -35,6 +33,7 @@ export class RegochWebsocketAngularService {
   ) {
     this.eventEmitter = new EventEmitter();
     this.attempt = 1;
+    this.helper = new Helper();
   }
 
 
@@ -43,8 +42,6 @@ export class RegochWebsocketAngularService {
    */
   setOpts(wcOpts: IwcOpts): void {
     this.wcOpts = wcOpts;
-    this.router = new Router(this.wcOpts.debug);
-    this.helper = helper;
   }
 
 
@@ -85,7 +82,7 @@ export class RegochWebsocketAngularService {
     const attempts = this.wcOpts.reconnectAttempts;
     const delay = this.wcOpts.reconnectDelay;
     if (this.attempt <= attempts) {
-      await helper.sleep(delay);
+      await this.helper.sleep(delay);
       this.connect();
       console.log(`Reconnect attempt #${this.attempt} of ${attempts} in ${delay}ms`);
       this.attempt++;
@@ -172,7 +169,7 @@ export class RegochWebsocketAngularService {
       this.onMessage(async (msgObj) => {
         if (msgObj.cmd === cmd) { resolve(msgObj); }
       }, false);
-      await helper.sleep(this.wcOpts.timeout);
+      await this.helper.sleep(this.wcOpts.timeout);
       reject(new Error(`No answer for the question: ${cmd}`));
     });
   }
@@ -221,7 +218,7 @@ export class RegochWebsocketAngularService {
    * (https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState).
    */
   carryOut(to: number|number[]|string, cmd: string, payload: any): void {
-    const id = helper.generateID(); // the message ID
+    const id = this.helper.generateID(); // the message ID
     const from = +this.socketID; // the sender ID
     if (!to) { to = 0; } // server ID is 0
     const msgObj = {id, from, to, cmd, payload};

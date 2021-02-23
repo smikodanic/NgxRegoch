@@ -3,7 +3,7 @@
 Open your browser's developer tools to see the activity.</p>
 
 <h3>Connection Test</h3>
-<button (click)="rwa.connect()">Connect</button>
+<button (click)="connectMe()">Connect</button>
 <button (click)="rwa.disconnect()">Disconnect</button>
 
 
@@ -41,14 +41,35 @@ room: <input type="text" [(ngModel)]="inputs.roomName" placeholder="room name">
     <h4>Server Commands</h4>
     nickname: <input type="text" [(ngModel)]="inputs.nickname" placeholder="nick name"><button (click)="setNick_test()">set nick name</button>
     <br>route:
-      <input type="text" [(ngModel)]="inputs.routeUri" placeholder="uri" value="/shop/product/55?limit=25">
-      <input type="text" [(ngModel)]="inputs.routeBody" placeholder="body" value='{"test": "something"}'>
+      <input type="text" [(ngModel)]="inputs.routeUri" placeholder="uri">
+      <input type="text" [(ngModel)]="inputs.routeBody" placeholder="body">
       <button (click)="route_test()">send route</button>
 
-    <br><input type="text" [(ngModel)]="inputs.routeUri2" placeholder="uri" value="/send/me/back"><button (click)="route_test2()">return route</button>
+    <br><input type="text" [(ngModel)]="inputs.routeUri2" placeholder="uri"><button (click)="route_test2()">return route</button>
 
 
     <br><br>
     <h4>Incoming Messages</h4>
     <p>{{incomingMessage}}</p>
+
+
+    <br><br>
+    <h4>Message format examples:</h4>
+    <textarea style="display:block;width:90%;height:210px;">
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/subscribe", "payload": "My Chat Room"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/unsubscribe", "payload": "My Chat Room"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/message", to: "My Chat Room", "payload": "Some message to room"/
+
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "route", "payload": /uri: "shop/login", body: /username:"mark", password:"thG5$#w"///
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "route", "payload": /uri: "shop/product/55"//
+
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/socket/id"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/socket/list"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/room/list"/
+
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/sendone", to: 21020213324769896, "payload": "Some message to another client"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/send", to: [21020213324769896], "payload": "Some message to another clients"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/broadcast", "payload": "Some message to all another clients except the sender"/
+    /"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/sendall", "payload": "Some message to all another clients"/
+    </textarea>
 

@@ -23,19 +23,23 @@
  * Variables "uri" and "body" are analogous to HTTP POST request, for example:  POST /room/subscribe/sasa/123?key=999  {a: 'something})
  */
 
+interface IrouterOpts {
+  debug: boolean;
+}
 
 
-class Router {
-  routerOpts: {debug: boolean};
-  routeDefs: {route: string, routeParsed: object, funcs: any[]}[]; // route definitions
+
+export class Router {
+  routerOpts: IrouterOpts;
+  routeDefs: {route: string, routeParsed: object, funcs: any[]}[] = []; // route definitions
   trx2: {uri: string, body?: any};
 
 
 
   /**
    */
-  constructor(routerOpts) {
-    this.routerOpts = routerOpts || {};
+  constructor(routerOpts: IrouterOpts) {
+    this.routerOpts = routerOpts;
   }
 
 
@@ -316,9 +320,3 @@ class Router {
 
 
 }
-
-
-
-
-
-export default Router;

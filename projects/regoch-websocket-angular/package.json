@@ -1,6 +1,27 @@
 {
   "name": "regoch-websocket-angular",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "title": "Regoch Websocket Client for Angular",
+  "description": "Websocket Client for Angular which works best with the Regoch Websocket Server.",
+  "author": "Sasa Mikodanic <smikodanic@gmail.com>",
+  "homepage": "http://www.regoch.org/websocket-client-angular",
+  "license": "AGPL-3.0",
+  "keywords": [
+    "websocket",
+    "client",
+    "angular",
+    "socket",
+    "ws",
+    "RFC 6455",
+    "real-time",
+    "realtime",
+    "tcp",
+    "websocket client",
+    "regoch"
+  ],
+  "scripts": {
+    "dev": "ng build RegochWebsocketAngular --watch"
+  },
   "peerDependencies": {
     "@angular/common": "^11.0.9",
     "@angular/core": "^11.0.9"

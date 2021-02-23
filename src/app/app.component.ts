@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RegochWebsocketAngularService } from 'regoch-websocket-angular';
+import { RegochWebsocketAngularService, Router, Helper } from 'regoch-websocket-angular';
 
 
 @Component({
@@ -16,6 +16,9 @@ export class AppComponent {
 
   inputs: any = {};
 
+  router: Router;
+  helper: any;
+
 
   constructor(
     public rwa: RegochWebsocketAngularService
@@ -29,6 +32,13 @@ export class AppComponent {
       debug: true
     };
     this.rwa.setOpts(wcOpts);
+
+    this.inputs.routeUri = '/shop/product/55?limit=25';
+    this.inputs.routeBody = '{"test": "something"}';
+    this.inputs.routeUri2 = '/send/me/back';
+
+    this.router = new Router({debug: false});
+    this.helper = new Helper();
   }
 
 
@@ -106,7 +116,7 @@ export class AppComponent {
   }
 
 
-   messageReceiver(): void {
+  messageReceiver(): void {
     this.rwa.on('message', (msg, msgSTR) => {
       console.log('message SUBPROTOCOL', msg); // message after subprotocol
       console.log('message STRING', msgSTR); // received message
@@ -117,7 +127,7 @@ export class AppComponent {
 
   // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
   printInfo(msg: any): void {
-    const msgSize = this.rwa.helper.getMessageSize(msg);
+    const msgSize = this.helper.getMessageSize(msg);
     if (this.rwa.wsocket && this.rwa.wsocket.readyState === 1) { console.log(`Sent (${msgSize}): ${msg}`); }
   }
 
@@ -167,7 +177,7 @@ export class AppComponent {
     this.rwa.once('route', (msg: any, msgSTR: string) => {
       console.log('route msg::', msg);
       // router transitional variable
-      const router = this.rwa.router;
+      const router = this.router;
       const payload: {uri: string, body?: any} = msg.payload;
 
       // router transitional varaible
@@ -188,6 +198,7 @@ export class AppComponent {
 
     });
   }
+
 
 
 

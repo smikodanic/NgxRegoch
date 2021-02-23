@@ -17,16 +17,66 @@ npm install --save regoch-websocket-angular
 - subprotocol: **[jsonRWS](http://www.regoch.org/websocket-protocol-jsonRWS)**
 - chat in the rooms
 - small file size
-- integrate as Angular Service
+- integrate Angular Service
 - powerful API
 - possible RxJS integration
-- [browserify](http://browserify.org/)
+- Router
+- helper
 
 
 ## Development
 ```bash
 npm run dev
 ```
+
+## How to use
+1) Inject service *RegochWebsocketAngularService* in the module
+```javascript
+//// app.module.ts /////
+import { RegochWebsocketAngularService } from 'regoch-websocket-angular';
+
+... providers: [RegochWebsocketAngularService] ...
+```
+
+2) Init services *RegochWebsocketAngularService, Router and Helper*
+```javascript
+//// app.component.ts /////
+import { RegochWebsocketAngularService } from 'regoch-websocket-angular';
+
+constructor(
+    public rwa: RegochWebsocketAngularService
+  ) {
+    const wcOpts = {
+      wsURL: 'ws://localhost:3211?authkey=TRTmrt',
+      timeout: 3 * 1000, // wait 3secs for answer
+      reconnectAttempts: 5, // try to reconnect 5 times
+      reconnectDelay: 3000, // delay between reconnections is 3 seconds
+      subprotocols: ['jsonRWS'],
+      debug: true
+    };
+    this.rwa.setOpts(wcOpts);
+
+    // init router and helper
+    this.router = new Router({debug: false});
+    this.helper = new Helper();
+  }
+
+async connectMe(): Promise<void> {
+    const wsocket = await this.rwa.connect();
+    console.log('+++Connected', wsocket);
+    this.messageReceiver();
+  }
+```
+
+```html
+<!--app.component.ts -->
+<button (click)="connectMe()">Connect</button>
+<button (click)="rwa.disconnect()">Disconnect</button>
+```
+
+
+
+
 
 ## API
 - **connect()** - connect to the websocket server
@@ -54,19 +104,6 @@ npm run dev
 - **once(eventName:string, listener:Function)** - listen events: *'connected', 'message', 'route'* only once
 
 
-
-## How to use
-It's very simpe. Just import into you Angular module.
-
-```javascript
-import
-
-```
-
-```html
-<button (click)="connect()">Connect</button>
-<button (click)="disconnect()">Disconnect</button>
-```
 
 
 ## subprotocol "jsonRWS"

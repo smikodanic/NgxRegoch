@@ -1,4 +1,4 @@
-class Helper {
+export class Helper {
 
   /**
    * Get message size in bytes.
@@ -43,6 +43,3 @@ class Helper {
 
 
 }
-
-
-export default new Helper();
