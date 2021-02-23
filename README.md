@@ -2,7 +2,7 @@
 Regoch libraries for Angular framework.
 
 
-## 1. [regoch-websocket-angular](./projects/regoch-websocket-angular/README.md)
+## 1. regoch-websocket-angular
 > Websocket Client for angular framework. Works best with the [Regoch Websocket Server](https://github.com/smikodanic/regoch-websocket-server).
 
 
@@ -34,3 +34,5 @@ $ sudo npm link
 Now both the test app and the lib will be updated as the code is changed.
 
 
+**READ MORE ...**
+More info *regoch-websocket-angular* library at [README.md](./projects/regoch-websocket-angular/README.md) .

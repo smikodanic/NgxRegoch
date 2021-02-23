@@ -11,6 +11,15 @@
  *  c) The message is converted from string to object.
  */
 
+interface Imsg {
+  id: number;
+  from: number;
+  to: number | number[] | string;
+  cmd: string;
+  payload?: any;
+}
+
+
 
 class JsonRWS {
 
@@ -19,10 +28,8 @@ class JsonRWS {
    * Execute the jsonRWS subprotocol for incoming messages. Filter and map incoming messages.
    * 1. Test if the message has valid "jsonRWS" format {id:number, from:number, to:number|number[]|string, cmd:string, payload?:any}.
    * 2. Convert the message from string to object.
-   * @param {string} msgSTR -incoming message
-   * @returns {{id:number, from:number, to:number|number[]|string, cmd:string, payload?:any}}
    */
-  incoming(msgSTR) {
+  incoming(msgSTR: string): Imsg {
     let tf = false;
     let msg;
     try {
@@ -44,10 +51,8 @@ class JsonRWS {
    * Execute the jsonRWS subprotocol for outgoing messages. Filter and map outgoing messages.
    * 1. Test if the message has valid "jsonRWS" format {id:number, from:number, to:number|number[]|string, cmd:string, payload:any}.
    * 2. Convert the message from object to string.
-   * @param {{id:number, from:number, to:number|number[]|string, cmd:string, payload?:any}} msg - outgoing message
-   * @returns {string}
    */
-  outgoing(msg) {
+  outgoing(msg: Imsg): string {
     const msgObjProperties = Object.keys(msg);
     const tf = this._testFields(msgObjProperties);
 
@@ -62,9 +67,8 @@ class JsonRWS {
 
   /**
    * Helper to test msg properties.
-   * @param {string[]} msgObjProperties - propewrties of the "msg" object
    */
-  _testFields(msgObjProperties) {
+  _testFields(msgObjProperties: string[]): boolean {
     const allowedFields = ['id', 'from', 'to', 'cmd', 'payload'];
     const requiredFields = ['id', 'from', 'to', 'cmd'];
     let tf = true;
@@ -76,7 +80,7 @@ class JsonRWS {
 
     // check if every of required fields is present
     for (const requiredField of requiredFields) {
-      if(msgObjProperties.indexOf(requiredField) === -1) { tf = false; break; }
+      if (msgObjProperties.indexOf(requiredField) === -1) { tf = false; break; }
     }
 
     return tf;

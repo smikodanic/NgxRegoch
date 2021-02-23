@@ -1,0 +1,18 @@
+* {
+  font-family: Verdana;
+}
+h4 {
+  color:Gray;
+}
+input {
+  width: 340px;
+}
+.data-text {
+  color: brown;
+  font-size: smaller;
+  margin-left: 5px;
+}
+#incomingMessage {
+  color:orange;
+  font-size: smaller;
+}

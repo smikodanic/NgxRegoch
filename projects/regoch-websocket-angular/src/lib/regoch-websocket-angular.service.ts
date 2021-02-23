@@ -27,6 +27,8 @@ export class RegochWebsocketAngularService {
   wsocket: any; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
   socketID: number; // socket ID number, for example: 210214082949459100
   eventEmitter: EventEmitter;
+  router: Router;
+  helper: any;
   private attempt: number; // reconnect attempt counter
 
   constructor(
@@ -39,9 +41,11 @@ export class RegochWebsocketAngularService {
   /**
    * Set options
    */
-   setOpts(wcOpts: IwcOpts): void {
-   this.wcOpts = wcOpts;
-   }
+  setOpts(wcOpts: IwcOpts): void {
+    this.wcOpts = wcOpts;
+    this.router = new Router(this.wcOpts.debug);
+    this.helper = helper;
+  }
 
 
   /************* CLIENT CONNECTOR ************/
@@ -49,7 +53,7 @@ export class RegochWebsocketAngularService {
    * Connect to the websocket server.
    */
   connect(): Promise<any> {
-    const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
+    const wsURL: string = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
     this.wsocket = new WebSocket(wsURL, this.wcOpts.subprotocols);
 
     this.onEvents();
@@ -67,7 +71,8 @@ export class RegochWebsocketAngularService {
    * Disconnect from the websocket server.
    */
   disconnect(): void {
-    this.wsocket.close();
+    if (!!this.wsocket) { this.wsocket.close(); }
+    this.blockReconnect();
   }
 
 
@@ -76,7 +81,7 @@ export class RegochWebsocketAngularService {
    * Try to reconnect the client when the socket is closed.
    * This method is fired on every 'close' socket's event.
    */
-  async reconnect() {
+  async reconnect(): Promise<void> {
     const attempts = this.wcOpts.reconnectAttempts;
     const delay = this.wcOpts.reconnectDelay;
     if (this.attempt <= attempts) {
@@ -88,12 +93,19 @@ export class RegochWebsocketAngularService {
   }
 
 
+  /**
+   * Block reconnect usually after disconnect() method is used.
+   */
+  blockReconnect(): void {
+    this.attempt = this.wcOpts.reconnectAttempts + 1;
+  }
+
+
 
   /**
    * Event listeners.
-   * @returns {void}
    */
-  onEvents() {
+  onEvents(): void {
     this.wsocket.onopen = async (openEvt) => {
       console.log('WS Connection opened');
       this.attempt = 1;
@@ -120,11 +132,8 @@ export class RegochWebsocketAngularService {
   /************* RECEIVER ************/
   /**
    * Receive the message event and push it to msgStream.
-   * @param {Function} cb - callback function
-   * @param {boolean} toEmit - to emit the message into the eventEmitter
-   * @returns {void}
    */
-  onMessage(cb, toEmit) {
+  onMessage(cb: any, toEmit: boolean): void {
     this.wsocket.onmessage = (event) => {
       try {
         const msgSTR = event.data;
@@ -151,10 +160,8 @@ export class RegochWebsocketAngularService {
   /*** Send a question to the websocket server and wait for the answer. */
   /**
    * Send question and expect the answer.
-   * @param {string} cmd - command
-   * @returns {Promise<object>}
    */
-  question(cmd) {
+  question(cmd: string): Promise<object> {
     // send the question
     const payload = undefined;
     const to = this.socketID;
@@ -172,9 +179,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send question about my socket ID.
-   * @returns {Promise<number>}
    */
-  async infoSocketId() {
+  async infoSocketId(): Promise<number> {
     const answer: any = await this.question('info/socket/id');
     this.socketID = +answer.payload;
     return this.socketID;
@@ -182,27 +188,24 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send question about all socket IDs connected to the server.
-   * @returns {Promise<number[]>}
    */
-  async infoSocketList() {
+  async infoSocketList(): Promise<number[]> {
     const answer: any = await this.question('info/socket/list');
     return answer.payload;
   }
 
   /**
    * Send question about all rooms in the server.
-   * @returns {Promise<{name:string, socketIds:number[]}[]>}
    */
-  async infoRoomList() {
+  async infoRoomList(): Promise<{name: string, socketIds: number[]}[]> {
     const answer: any = await this.question('info/room/list');
     return answer.payload;
   }
 
   /**
    * Send question about all rooms where the client was entered.
-   * @returns {Promise<{name:string, socketIds:number[]}[]>}
    */
-  async infoRoomListmy() {
+  async infoRoomListmy(): Promise<{name: string, socketIds: number[]}[]> {
     const answer: any = await this.question(`info/room/listmy`);
     return answer.payload;
   }
@@ -214,13 +217,10 @@ export class RegochWebsocketAngularService {
 
   /************* SEND MESSAGE TO OTHER CLIENTS ************/
   /**
-   * Send message to the websocket server if the connection is not closed (https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState).
-   * @param {number} to - final destination: 210201164339351900
-   * @param {string} cmd - command
-   * @param {any} payload - message payload
-   * @returns {void}
+   * Send message to the websocket server if the connection is not closed
+   * (https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState).
    */
-  carryOut(to, cmd, payload) {
+  carryOut(to: number|number[]|string, cmd: string, payload: any): void {
     const id = helper.generateID(); // the message ID
     const from = +this.socketID; // the sender ID
     if (!to) { to = 0; } // server ID is 0
@@ -239,11 +239,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send message (payload) to one client.
-   * @param {number} to - 210201164339351900
-   * @param {any} msg - message sent to the client
-   * @returns {void}
    */
-  sendOne(to, msg) {
+  sendOne(to: number, msg: any): void {
     const cmd = 'socket/sendone';
     const payload = msg;
     this.carryOut(to, cmd, payload);
@@ -252,11 +249,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send message (payload) to one or more clients.
-   * @param {number[]} to - [210205081923171300, 210205082042463230]
-   * @param {any} msg - message sent to the clients
-   * @returns {void}
    */
-  send(to, msg) {
+  send(to: number[], msg: any): void {
     const cmd = 'socket/send';
     const payload = msg;
     this.carryOut(to, cmd, payload);
@@ -265,10 +259,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send message (payload) to all clients except the sender.
-   * @param {any} msg - message sent to the clients
-   * @returns {void}
    */
-  broadcast(msg) {
+  broadcast(msg: any): void {
     const to = 0;
     const cmd = 'socket/broadcast';
     const payload = msg;
@@ -277,10 +269,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send message (payload) to all clients and the sender.
-   * @param {any} msg - message sent to the clients
-   * @returns {void}
    */
-  sendAll(msg) {
+  sendAll(msg: any): void {
     const to = 0;
     const cmd = 'socket/sendall';
     const payload = msg;
@@ -292,10 +282,8 @@ export class RegochWebsocketAngularService {
   /************* ROOM ************/
   /**
    * Subscribe in the room.
-   * @param {string} roomName
-   * @returns {void}
    */
-  roomEnter(roomName) {
+  roomEnter(roomName: string): void {
     const to = 0;
     const cmd = 'room/enter';
     const payload = roomName;
@@ -304,10 +292,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Unsubscribe from the room.
-   * @param {string} roomName
-   * @returns {void}
    */
-  roomExit(roomName) {
+  roomExit(roomName: string): void {
     const to = 0;
     const cmd = 'room/exit';
     const payload = roomName;
@@ -316,9 +302,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Unsubscribe from all rooms.
-   * @returns {void}
    */
-  roomExitAll() {
+  roomExitAll(): void {
     const to = 0;
     const cmd = 'room/exitall';
     const payload = undefined;
@@ -327,11 +312,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send message to the room.
-   * @param {string} roomName
-   * @param {any} msg
-   * @returns {void}
    */
-  roomSend(roomName, msg) {
+  roomSend(roomName: string, msg: any): void {
     const to = roomName;
     const cmd = 'room/send';
     const payload = msg;
@@ -344,10 +326,8 @@ export class RegochWebsocketAngularService {
   /********* SEND MESSAGE (COMMAND) TO SERVER *********/
   /**
    * Setup a nick name.
-   * @param {string} nickname - nick name
-   * @returns {void}
    */
-  setNick(nickname) {
+  setNick(nickname: string): void {
     const to = 0;
     const cmd = 'socket/nick';
     const payload = nickname;
@@ -357,11 +337,8 @@ export class RegochWebsocketAngularService {
 
   /**
    * Send route command.
-   * @param {string} uri - route URI, for example /shop/product/55
-   * @param {any} body - body
-   * @returns {void}
    */
-  route(uri, body) {
+  route(uri: string, body: any): void {
     const to = 0;
     const cmd = 'route';
     const payload = {uri, body};
@@ -374,19 +351,15 @@ export class RegochWebsocketAngularService {
   /*********** LISTENERS ************/
   /**
    * Wrapper around the eventEmitter
-   * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function
    */
-  on(eventName, listener) {
+  on(eventName: string, listener: any): any {
     return this.eventEmitter.on(eventName, listener);
   }
 
   /**
    * Wrapper around the eventEmitter
-   * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function
    */
-  once(eventName, listener) {
+  once(eventName: string, listener: any): any {
     return this.eventEmitter.once(eventName, listener);
   }
 
@@ -395,15 +368,11 @@ export class RegochWebsocketAngularService {
   /*********** MISC ************/
   /**
    * Debugger. Use it as this.debug(var1, var2, var3)
-   * @returns {void}
    */
-  debugger(...textParts) {
+  debugger(...textParts): void {
     const text = textParts.join('');
     if (this.wcOpts.debug) { console.log(text); }
   }
-
-
-
 
 
 }

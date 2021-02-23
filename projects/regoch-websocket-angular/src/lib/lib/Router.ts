@@ -15,37 +15,34 @@
  * body :any - data sent along with uri as the transitional object - trx: {uri, body}
  *
  * func :Function - route function - a function which is executed when certain route is matched against the uri
- * trx :object - transitional object which can be changed in the route functions, required field is "uri" - {uri, body, uriParsed, routeParsed, params, query}
+ * trx :object - transitional object which can be changed in the route functions, required
+ * field is "uri" - {uri, body, uriParsed, routeParsed, params, query}
  *
  * Notice
- *-----------
+ * -------
  * Variables "uri" and "body" are analogous to HTTP POST request, for example:  POST /room/subscribe/sasa/123?key=999  {a: 'something})
  */
 
 
 
 class Router {
-  routerOpts;
-  routeDefs;
-  _trx;
+  routerOpts: {debug: boolean};
+  routeDefs: {route: string, routeParsed: object, funcs: any[]}[]; // route definitions
+  trx2: {uri: string, body?: any};
+
 
 
   /**
-   * @param {object} routerOpts - router initial options {debug:boolean}
    */
   constructor(routerOpts) {
     this.routerOpts = routerOpts || {};
-    this.trx; // transitional object {uri:string, body:any, ...}
-    this.routeDefs = []; // route definitions [{route:string, routeParsed:object, funcs:Function[] }]
   }
 
 
   /**
    * Set transitional object.
-   * @param {object} obj - {uri, body, ...}
-   * @returns {void}
    */
-  set trx(obj) {
+  set trx(obj: any) {
     // required properties
     if (!obj.uri) { throw new Error('The "uri" property is required.'); }
 
@@ -63,27 +60,23 @@ class Router {
     // parse uri
     obj.uriParsed = this._uriParser(obj.uri);
 
-    this._trx = obj;
+    this.trx2 = obj;
   }
 
 
   /**
    * Get transitional object.
-   * @returns {object} - {uri, body, ...}
    */
-  get trx() {
-    return this._trx;
+  get trx(): any {
+    return this.trx2;
   }
 
 
 
   /**
    * Define route, routeParsed and corresponding functions.
-   * @param {string} route - /room/subscribe/:room_name
-   * @param {Function[]} funcs - route functions
-   * @returns {Router}
    */
-  def(route, ...funcs) {
+  def(route: string, ...funcs: any[]): Router {
     this.routeDefs.push({
       route,
       routeParsed: this._routeParser(route),
@@ -95,11 +88,8 @@ class Router {
 
   /**
    * Redirect from one route to another route.
-   * @param {string} fromRoute - new route
-   * @param {string} toRoute - destination route (where to redirect)
-   * @returns {Router}
    */
-  redirect(fromRoute, toRoute) {
+  redirect(fromRoute: string, toRoute: string): Router {
     const toRouteDef = this.routeDefs.find(routeDef => routeDef.route === toRoute); // {route, routeParsed, funcs}
     const toFuncs = !!toRouteDef ? toRouteDef.funcs : [];
     this.def(fromRoute, ...toFuncs); // assign destination functions to the new route
@@ -109,10 +99,8 @@ class Router {
 
   /**
    * Define special route <notfound>
-   * @param {Function[]} funcs - function which will be executed when route is not matched aginst URI
-   * @returns {Router}
    */
-  notfound(...funcs) {
+  notfound(...funcs: any[]): Router {
     this.def('<notfound>', ...funcs);
     return this;
   }
@@ -121,10 +109,8 @@ class Router {
 
   /**
    * Define special route <do>
-   * @param {Function[]} funcs - function which will be executed on every request, e.g. every exe()
-   * @returns {Router}
    */
-  do(...funcs) {
+  do(...funcs: any[]): Router {
     this.def('<do>', ...funcs);
     return this;
   }
@@ -134,38 +120,37 @@ class Router {
 
   /**
    * Execute the router functions.
-   * @returns {Promise<object>}
    */
-  async exe() {
+  async exe(): Promise<object> {
     const uriParsed = this.trx.uriParsed; // shop/register/john/23
 
     /*** FIND ROUTE ***/
     // found route definition
-    const routeDef_found = this.routeDefs.find(routeDef => { // {route, routeParsed, funcs}
-      const routeParsed = routeDef.routeParsed; // {full, segments, base}
+    const routeDefFound: any = this.routeDefs.find(routeDef => { // {route, routeParsed, funcs}
+      const routeParsed: any = routeDef.routeParsed; // {full, segments, base}
       return this._routeRegexMatchNoParams(routeParsed, uriParsed) || this._routeWithParamsMatch(routeParsed, uriParsed);
     });
 
     // not found route definition
-    const routeDef_notfound = this.routeDefs.find(routeDef => routeDef.route === '<notfound>');
+    const routeDefNotfound = this.routeDefs.find(routeDef => routeDef.route === '<notfound>');
 
     // do route definition
-    const routeDef_do = this.routeDefs.find(routeDef => routeDef.route === '<do>');
+    const routeDefDo = this.routeDefs.find(routeDef => routeDef.route === '<do>');
 
     /*** EXECUTE FOUND ROUTE FUNCTIONS */
-    if (!!routeDef_found) {
-      this.trx.routeParsed = routeDef_found.routeParsed;
+    if (!!routeDefFound) {
+      this.trx.routeParsed = routeDefFound.routeParsed;
       this.trx.query = uriParsed.queryObject;
-      this.trx.params = !!this.trx.routeParsed ? this._getParams(routeDef_found.routeParsed.full, uriParsed.path) : {};
+      this.trx.params = !!this.trx.routeParsed ? this._getParams(routeDefFound.routeParsed.full, uriParsed.path) : {};
 
-      for (const func of routeDef_found.funcs) { await func(this.trx); }
-    } else if (!!routeDef_notfound) {
-      for (const func of routeDef_notfound.funcs) { await func(this.trx); }
+      for (const func of routeDefFound.funcs) { await func(this.trx); }
+    } else if (!!routeDefNotfound) {
+      for (const func of routeDefNotfound.funcs) { await func(this.trx); }
     }
 
 
-    if (!!routeDef_do && !!routeDef_do.funcs && !!routeDef_do.funcs.length) {
-      for (const func of routeDef_do.funcs) { await func(this.trx); }
+    if (!!routeDefDo && !!routeDefDo.funcs && !!routeDefDo.funcs.length) {
+      for (const func of routeDefDo.funcs) { await func(this.trx); }
     }
 
 
@@ -183,11 +168,8 @@ class Router {
    * For example:
    *       (route) /ads/autos/bmw - (uri) /ads/autos/bmw -> true
    *       (route) /ads/a.+s/bmw  - (uri) /ads/autos/bmw -> true
-   * @param {object} routeParsed - {full, segments, base}
-   * @param {object} uriParsed - {path, segments, queryString, queryObject}
-   * @returns {boolean}
    */
-  _routeRegexMatchNoParams(routeParsed, uriParsed) {
+  _routeRegexMatchNoParams(routeParsed: {full: string, segments: number, base: string}, uriParsed: {path: string, segments: number, queryString: string, queryObject: object}): boolean {
     const routeReg = new RegExp(`^${routeParsed.full}$`, 'i');
     const tf1 = routeReg.test(uriParsed.path); // route must match uri
     const tf2 = routeParsed.segments === uriParsed.segments; // route and uri must have same number of segments
@@ -200,11 +182,8 @@ class Router {
   /**
    * Route with parameters match against the uri.
    * (route) /shop/register/:name/:age - (uri) /shop/register/john/23
-   * @param {object} routeParsed - {full, segments, base}
-   * @param {object} uriParsed - {path, segments, queryString, queryObject}
-   * @returns {boolean}
    */
-  _routeWithParamsMatch(routeParsed, uriParsed) {
+  _routeWithParamsMatch(routeParsed: {full: string, segments: number, base: string}, uriParsed: {path: string, segments: number, queryString: string, queryObject: object}): boolean {
     const routeReg = new RegExp(`^${routeParsed.base}\/`, 'i');
     const tf1 = routeReg.test(uriParsed.path); // route base must match uri
     const tf2 = routeParsed.segments === uriParsed.segments; // route and uri must have same number of segments
@@ -223,23 +202,19 @@ class Router {
    * Removing slashes from the beginning and the end.
    * /ads/autos/bmw/ --> ads/autos/bmw
    * //ads/autos/bmw/// --> ads/autos/bmw
-   * @param {string} path - uri path or route
-   * @returns {string}
    */
-  _removeSlashes(path) {
+  _removeSlashes(path: string): string {
     return path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
   }
 
 
   /**
    * Convert string into integer, float or boolean.
-   * @param {string} value
-   * @returns {string | number | boolean | object}
    */
-  _typeConvertor(value) {
-    function isJSON(str) {
+  _typeConvertor(value: any): string | number | boolean | object {
+    function isJSON(str: string): boolean {
       try { JSON.parse(str); }
-      catch(err) { return false; }
+      catch (err) { return false; }
       return true;
     }
 
@@ -260,14 +235,14 @@ class Router {
 
   /**
    * Create query object from query string.
-   * @param  {string} queryString - x=abc&y=123&z=true
-   * @return {object}             - {x: 'abc', y: 123, z: true}
    */
-  _toQueryObject(queryString) {
+  _toQueryObject(queryString: string): object {
     const queryArr = queryString.split('&');
     const queryObject = {};
 
-    let eqParts, property, value;
+    let eqParts;
+    let property;
+    let value;
     queryArr.forEach(elem => {
       eqParts = elem.split('='); // equotion parts
       property = eqParts[0];
@@ -285,10 +260,8 @@ class Router {
 
   /**
    * URI parser
-   * @param  {string} uri - /shop/register/john/23?x=abc&y=123&z=true  (uri === trx.uri)
-   * @returns {path:string, queryString:string, queryObject:object} - {path: 'shop/register/john/23', queryString: 'x=abc&y=123&z=true', queryObject: {x: 'abc', y: 123, z: true}}
    */
-  _uriParser(uri) {
+  _uriParser(uri: string): {path: string, queryString: string, queryObject: object} {
     const uriDivided = uri.split('?');
 
     const path = this._removeSlashes(uriDivided[0]); // /shop/register/john/23 -> shop/register/john/23
@@ -302,12 +275,9 @@ class Router {
 
 
   /**
-   * Route parser.
-   * Converts route string into the parsed object {full, segments, parser} which is used for matching against the URI.
-   * @param  {string} route - /shop/register/:name/:age/
-   * @returns {full:string, segments:number, base:string} - {full: 'shop/register/:name/:age', segments: 4, base: 'shop/register'}
+   * Route parser. Converts route string into the parsed object {full, segments, parser} which is used for matching against the URI.
    */
-  _routeParser(route) {
+  _routeParser(route: string): {full: string, segments: number, base: string}  {
     const full = this._removeSlashes(route);
     const segments = full.split('/').length;
     const base = full.replace(/\/\:.+/, ''); // shop/register/:name/:age --> shop/register
@@ -319,13 +289,9 @@ class Router {
 
 
   /**
-   * Create parameters object.
-   * For example if route is /register/:name/:age AND uri is /register/john/23 then params is {name: 'john', age: 23}
-   * @param  {string} routeParsedFull - routeParsed.full -- shop/register/:name/:age
-   * @param  {string} uriParsedPath  - uriParsed.path -- shop/register/john/23
-   * @returns {object}
+   * Create parameters object. For example if route is /register/:name/:age AND uri is /register/john/23 then params is {name: 'john', age: 23}
    */
-  _getParams(routeParsedFull, uriParsedPath) {
+  _getParams(routeParsedFull: string, uriParsedPath: string): any {
     const routeParts = routeParsedFull.split('/'); // ['shop', 'register', ':name', ':age']
     const uriParts = uriParsedPath.split('/'); // ['shop', 'register', 'john', 23]
 
@@ -335,7 +301,7 @@ class Router {
       if (/\:/.test(routePart)) {
         const property = routePart.replace(/^\:/, ''); // remove :
 
-        let value = uriParts[index];
+        let value: string | number | boolean | object = uriParts[index];
         value = this._typeConvertor(value); // t y p e   c o n v e r s i o n
 
         params[property] = value;
