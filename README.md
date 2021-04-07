@@ -22,7 +22,7 @@ $ ng serve -o
 In the second terminal build the project (library) regoch-websocket-client
 ```bash
 $ cd /NgxRegoch/projects/regoch-websocket-angular
-$ ng build RegochWebsocketAngular --watch
+$ ng build RegochWebsocketAngular --watch --prod
 ```
 
 Make link to the builded library.
@@ -31,8 +31,19 @@ $ cd /NgxRegoch/dist/regoch-websocket-angular
 $ sudo npm link
 ```
 
+Or publish it to the NPM
+```bash
+$ cd /NgxRegoch/dist/regoch-websocket-angular
+$ npm version patch | minor | major
+$ npm publish
+```
+
 Now both the test app and the lib will be updated as the code is changed.
 
 
 **READ MORE ...**
 More info *regoch-websocket-angular* library at [README.md](./projects/regoch-websocket-angular/README.md) .
+
+
+### Licence
+Copyright (c) 2020 Saša Mikodanić licensed under [MIT](./LICENSE) .
